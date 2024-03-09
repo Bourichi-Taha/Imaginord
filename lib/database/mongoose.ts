@@ -1,7 +1,7 @@
 import mongoose,{ Mongoose } from "mongoose";
 
 
-const MONGODB_URL = process.env.NEXT_PUBLIC_MONGO_URL;
+const MONGODB_URL = process.env.MONGO_URL;
 
 interface MongooseConnection {
     conn:Mongoose | null;

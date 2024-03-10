@@ -29,6 +29,7 @@ import { getCldImageUrl } from "next-cloudinary"
 import { addImage, updateImage } from "@/lib/actions/image.actions"
 import { useRouter } from "next/navigation"
 import { InsufficientCreditsModal } from "./InsufficientCreditsModal"
+import { IImage } from "@/lib/database/models/image.model"
  
 export const formSchema = z.object({
   title: z.string(),
@@ -40,7 +41,7 @@ export const formSchema = z.object({
 
 const TransformationForm = ({ action, data = null, userId, type, creditBalance, config = null }: TransformationFormProps) => {
   const transformationType = transformationTypes[type];
-  const [image, setImage] = useState(data)
+  const [image, setImage] = useState<IImage>(data)
   const [newTransformation, setNewTransformation] = useState<Transformations | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
@@ -65,9 +66,10 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-
+console.log(values)
+console.log(image)
     if(data || image) {
-      const transformationUrl = getCldImageUrl({
+      const transformationURL = getCldImageUrl({
         width: image?.width,
         height: image?.height,
         src: image?.publicId,
@@ -81,8 +83,8 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         width: image?.width,
         height: image?.height,
         config: transformationConfig,
-        secureURL: image?.secureURL,
-        transformationURL: transformationUrl,
+        secureURL: image.secureURL,
+        transformationURL: transformationURL,
         aspectRatio: values.aspectRatio,
         prompt: values.prompt,
         color: values.color,

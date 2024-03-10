@@ -72,7 +72,7 @@ export async function deleteImage(imageId: string) {
     await Image.findByIdAndDelete(imageId);
   } catch (error) {
     handleError(error)
-  } finally{
+  } finally {
     redirect('/')
   }
 }
@@ -84,7 +84,7 @@ export async function getImageById(imageId: string) {
 
     const image = await populateUser(Image.findById(imageId));
 
-    if(!image) throw new Error("Image not found");
+    if (!image) throw new Error("Image not found");
 
     return JSON.parse(JSON.stringify(image));
   } catch (error) {
@@ -93,7 +93,7 @@ export async function getImageById(imageId: string) {
 }
 
 // GET IMAGES
-export async function getAllImages({ limit = 9, page = 1, searchQuery = '' }: {
+export async function getAllImages({ limit = 9, page = 1, searchQuery = 'coffe' }: {
   limit?: number;
   page: number;
   searchQuery?: string;
@@ -106,38 +106,42 @@ export async function getAllImages({ limit = 9, page = 1, searchQuery = '' }: {
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
       secure: true,
+
     })
+    let expression = `resource_type:image AND folder=imaginord`;
 
-    let expression = 'folder=imaginify';
-
-    if (searchQuery) {
-      expression += ` AND ${searchQuery}`
-    }
-
+    // if (searchQuery !== '') {
+    //   expression += ` AND ${searchQuery}`
+    // }
     const { resources } = await cloudinary.search
       .expression(expression)
       .execute();
-
     const resourceIds = resources.map((resource: any) => resource.public_id);
 
     let query = {};
 
-    if(searchQuery) {
+    if (searchQuery !== '') {
+      const regexPattern = new RegExp(`.*${searchQuery}.*`, 'i');
       query = {
         publicId: {
           $in: resourceIds
-        }
+        },
+        title: regexPattern
       }
     }
 
-    const skipAmount = (Number(page) -1) * limit;
+    const skipAmount = (Number(page) - 1) * limit;
 
     const images = await populateUser(Image.find(query))
       .sort({ updatedAt: -1 })
       .skip(skipAmount)
       .limit(limit);
-    
-    const totalImages = await Image.find(query).countDocuments();
+
+    const totalImages = await Image.find({
+      publicId: {
+        $in: resourceIds
+      }
+    }).countDocuments();
     const savedImages = await Image.find().countDocuments();
 
     return {
